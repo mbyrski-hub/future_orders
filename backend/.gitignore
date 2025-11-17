@@ -1,4 +1,4 @@
-# /backend/.gitignore
+# /backend/.gitignore dodac
 venv/
 *.pyc
 __pycache__/
