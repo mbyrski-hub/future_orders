@@ -44,7 +44,13 @@ def create_app():
         'sub': os.environ.get("VAPID_MAILTO")
     }
     # --- KONIEC ZMIAN ---
-
+    # --- NOWA ZMIENNA: Wczytanie listy odbiorców powiadomień ---
+    recipients_str = os.environ.get("ORDER_NOTIFICATION_RECIPIENTS", "")
+    # Automatycznie konwertuj string "mail1,mail2" na listę ['mail1', 'mail2']
+    # i usuń puste wpisy, jeśli zmienna jest pusta.
+    app.config['ORDER_NOTIFICATION_RECIPIENTS'] = [email.strip() for email in recipients_str.split(',') if email.strip()]
+    # --- KONIEC NOWEGO BLOKU ---
+    
     # Inicjalizacja rozszerzeń
     db.init_app(app)
     migrate.init_app(app, db)

@@ -506,10 +506,19 @@ def create_order():
         pdf_file = _generate_order_pdf(new_order, user)
         
         # 2. Stwórz i wyślij e-mail z załącznikiem
+        
+        # Pobierz listę adminów z konfiguracji (którą wczytaliśmy w __init__.py)
+        admin_recipients = current_app.config.get('ORDER_NOTIFICATION_RECIPIENTS', [])
+        
+        # Stwórz finalną listę odbiorców: Klient + Admini
+        all_recipients = [user.email] + admin_recipients
+
         msg = Message(
-            subject=f"Potwierdzenie Zamówienia #{new_order.id}",
-            recipients=[user.email],
-            body=f"Dziękujemy za złożenie zamówienia nr {new_order.id}. Szczegóły znajdują się w załączniku PDF."
+            # ZMIANA: Lepszy tytuł dla admina
+            subject=f"Potwierdzenie Zamówienia #{new_order.id} (Klient: {user.username})",
+            # ZMIANA: Wyślij do wszystkich
+            recipients=all_recipients, 
+            body=f"Dziękujemy za złożenie zamówienia nr {new_order.id}. Szczegóły znajdują się w załączniku PDF.\n\n(Ta wiadomość została wysłana do klienta oraz do administratorów systemu)."
         )
         msg.attach(
             f"zamowienie_{new_order.id}.pdf",
@@ -780,17 +789,56 @@ def ship_order_items(order_id):
         except Exception as e:
             print(f"BŁĄD: Nie udało się wysłać powiadomienia PUSH o statusie: {e}")
 
-        # 6. Zwróć zaktualizowane zamówienie z 'user_info'
+        # 7. --- NOWA LOGIKA: E-MAIL O STATUSIE WYSYŁKI ---
+        try:
+            title = None
+            body_text = None
+            
+            # Używamy imienia klienta, jeśli istnieje, dla personalizacji
+            customer_name = order.user.first_name or order.user.username
+
+            if order.status == 'partial':
+                title = f"Twoje zamówienie #{order.id} zostało częściowo wysłane"
+                body_text = (f"Cześć {customer_name},\n\n"
+                             f"Dobra wiadomość! Część Twojego zamówienia #{order.id} została właśnie wysłana.\n"
+                             f"Historię wysłanych paczek możesz śledzić w swoim panelu klienta.\n\n"
+                             f"Pozdrawiamy,\nZespół Obsługi")
+
+            elif order.status == 'completed':
+                title = f"Twoje zamówienie #{order.id} zostało zrealizowane"
+                body_text = (f"Cześć {customer_name},\n\n"
+                             f"Wszystkie produkty z Twojego zamówienia #{order.id} zostały wysłane.\n"
+                             f"Dziękujemy za zakupy!\n\n"
+                             f"Pozdrawiamy,\nZespół Obsługi")
+
+            # Jeśli status się zgadza, wyślij e-mail
+            if title and body_text:
+                msg = Message(
+                    subject=title,
+                    recipients=[order.user.email], # Wyślij tylko do klienta
+                    body=body_text
+                )
+                mail.send(msg)
+        
+        except Exception as e:
+            # Błąd wysyłki e-maila nie może zatrzymać całej operacji
+            print(f"BŁĄD: Nie udało się wysłać e-maila o statusie wysyłki: {e}")
+        # --- KONIEC NOWEJ LOGIKI ---
+
+        
+        # 8. Zwróć zaktualizowane zamówienie (stary blok 7)
         order_dict = order.to_dict()
         order_dict['user_info'] = {
             "username": order.user.username,
-            "email": order.user.email
+            "email": order.user.email,
+            "first_name": order.user.first_name,
+            "last_name": order.user.last_name
         }
         return jsonify(order_dict), 200
 
     except Exception as e:
         db.session.rollback()
-        return jsonify({"msg": str(e)}), 400
+        return jsonify({"msg": str(e)}), 40
     
 @api_bp.route('/me', methods=['GET'])
 @jwt_required() # Dowolny zalogowany użytkownik
