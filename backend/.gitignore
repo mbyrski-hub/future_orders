@@ -1,0 +1,7 @@
+# /backend/.gitignore
+venv/
+*.pyc
+__pycache__/
+app.db
+.env  # <-- TA LINIA JEST NAJWAŻNIEJSZA
+migrations/

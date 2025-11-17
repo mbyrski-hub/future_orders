@@ -1,0 +1,37 @@
+Krok 4: Frontend (Vue) - Setup
+Otwórz drugi, nowy terminal i wróć do głównego folderu MojeZamowienia.
+
+Wejdź do folderu frontend:
+
+Bash
+
+cd ../frontend  # (Jeśli byłeś w 'backend')
+Użyj Vite (nowoczesne narzędzie) do stworzenia aplikacji Vue:
+
+Bash
+
+npm create vue@latest
+Wpisz nazwę projektu: . (oznacza "w bieżącym folderze").
+
+Wybierz: Vue
+
+Wybierz: JavaScript (lub TypeScript, jeśli wolisz)
+
+Pytania o dodatki:
+
+Add Vue Router for Single Page Application? Yes
+
+Add Pinia for state management? Yes
+
+(Resztę możesz dać "No" na razie)
+
+Zainstaluj zależności:
+
+Bash
+
+npm install
+Zainstaluj Axios (do zapytań API) i Bootstrap:
+
+Bash
+
+npm install axios bootstrap

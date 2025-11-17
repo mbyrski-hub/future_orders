@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Potwierdzenie Zamówienia</title>
+    <style>
+        body { 
+            font-family: sans-serif; 
+            margin: 20px; 
+            color: #333;
+        }
+
+        /* --- NAGŁÓWEK Z LOGOTYPAMI --- */
+        .header {
+            display: block;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        .header-logos {
+            width: 100%;
+        }
+        .header-logos td {
+            border: none;
+            padding: 0;
+            vertical-align: middle;
+        }
+        .logo-left {
+            text-align: left;
+        }
+        .logo-right {
+            text-align: right;
+        }
+        
+        /* Usunęliśmy stąd style 'max-height', 
+           ponieważ ustawiamy je bezpośrednio w HTML */
+
+        .title-section {
+            text-align: center;
+            margin-top: 10px;
+            margin-bottom: 25px;
+        }
+        .title-section h1 {
+            font-size: 2.2em;
+            margin: 0;
+            color: #000;
+        }
+        .title-section p {
+            font-size: 1.1em;
+            color: #555;
+            margin: 5px 0 0 0;
+        }
+
+        .order-details { margin-bottom: 20px; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        
+        th, td { 
+            border: 1px solid #ddd; 
+            padding: 6px 8px;
+            text-align: left; 
+            vertical-align: top;
+        }
+        th { 
+            background-color: #f4f4f4; 
+        }
+        
+        .product-name-cell {
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        .text-right {
+            text-align: right;
+        }
+        .notes {
+            margin-top: 25px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <table class="header-logos">
+            <tr>
+                <td class="logo-left">
+                    <img src="/static/img/logo_cz.png" height="65" alt="Logo Firmy">
+                </td>
+                <td class="logo-right">
+                    <img src="/static/img/h_cz.png" height="60" alt="Logo H">
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="title-section">
+        <h1>Zamówienie #{{ order.id }}</h1>
+        <p>Z dnia: {{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+    </div>
+
+    <div class="order-details">
+        <strong>Klient:</strong> {{ user.username }}<br>
+        <strong>Email:</strong> {{ user.email }}
+    </div>
+
+    <h3>Zamówione produkty:</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Produkt</th>
+                <th>Wariant (Rozmiar)</th>
+                <th class="text-right" style="width: 25%;">Ilość</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for product in grouped_items %}
+                {% for variant in product.variants %}
+                <tr>
+                    {% if loop.first %}
+                        <td rowspan="{{ product.variants | length }}" class="product-name-cell">
+                            {{ product.name }}
+                        </td>
+                    {% endif %}
+                    <td>{{ variant.size }}</td>
+                    <td class="text-right">{{ variant.quantity }} szt.</td>
+                </tr>
+                {% endfor %}
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    {% if order.notes %}
+    <div class="notes">
+        <h3>Uwagi do zamówienia:</h3>
+        <p style="white-space: pre-wrap; color: #555; border: 1px solid #eee; padding: 10px;">
+            {{ order.notes }}
+        </p>
+    </div>
+    {% endif %}
+
+</body>
+</html>
